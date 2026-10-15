@@ -1,6 +1,6 @@
 # Architecture
 
-Phase 0 defines **where things live** and **how a request will flow**. Phase 1 implements that flow. Nothing here is running yet.
+Phase 0 defined **where things live**. Phase 1 implements the request flow below.
 
 If you already design test architecture, treat this document like a test-system design: layers, responsibilities, interfaces, and what is deliberately out of scope.
 
@@ -16,25 +16,22 @@ It is not:
 
 The model is a **junior analyst**. The application is the **process** around that analyst: input validation, prompt, structured output, and (later) review, persistence, and retrieval.
 
-## High-level request flow (Phase 1 target)
+## High-level request flow (Phase 2)
 
 ```
 QA Engineer
-    ↓  types a feature / requirement (e.g. policy cancellation)
+    ↓  types a feature + selects scenario types
 React Vite frontend
-    ↓  HTTP POST JSON  (no API key in the browser)
-FastAPI backend  (validates request)
-    ↓  loads prompt template from prompts/
-AI Service
-    ↓  "generate structured QA artifacts"
-LLM Provider Adapter  (GeminiProvider)
-    ↓  cloud HTTPS
-Google Gemini
-    ↓  text / JSON
-Adapter + AI Service  (parse, validate shape)
-    ↓  JSON
-Frontend  (renders scenarios and cases for human review)
+    ↓  POST /api/v1/generate/scenarios
+Backend → prompt (scenarios) → provider → validate types
+    ↓  reviewable scenario list
+QA Engineer selects scenarios to keep
+    ↓  POST /api/v1/generate/cases
+Backend → prompt (cases) → provider → validate coverage
+    ↓  cases attached to selected scenarios
 ```
+
+Phase 1 one-shot `POST /api/v1/generate` is still available. The workbench uses the two-step path because a test lead reviews the scenario list before anyone writes cases.
 
 Every generated artifact is a **suggestion**. The human QA engineer is the gate, the same way an automation suite does not become production truth until someone reviews failures.
 
@@ -141,17 +138,18 @@ If Gemini is down, the UI should get an application error, not a raw SDK stack t
 
 Never log full prompts that contain production policyholder data. Phase 1 will use synthetic insurance examples.
 
-## What Phase 1 will add (and still will not add)
+## Phase 1 files
 
-**Add:**
+| Path | Role |
+|---|---|
+| `backend/app/main.py` | `GET /health`, `POST /api/v1/generate`, `/generate/scenarios`, `/generate/cases` |
+| `backend/app/schemas.py` | Separate contracts + JSON Schemas for pack, scenarios, cases |
+| `backend/app/ai_service.py` | Two prompts, two schemas, type/coverage validation |
+| `backend/app/providers/` | `LLMProvider` + `GeminiProvider` + `FakeProvider` |
+| `prompts/qa/` | `generate_test_pack.md`, `generate_scenarios.md`, `generate_cases.md` |
+| `frontend/src/App.tsx` | Type filter → scenarios → select → cases |
 
-- FastAPI app with a health endpoint and one generate endpoint
-- Gemini provider adapter
-- One prompt template under `prompts/qa/`
-- React workbench screen (input + structured output)
-- Backend tests around request validation and (where possible) mocked provider calls
-
-**Still will not add:**
+**Still not added:**
 
 - RAG / embeddings / vector store
 - Agents / tool calling

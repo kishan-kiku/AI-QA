@@ -80,6 +80,114 @@ Not applicable.
 
 ---
 
-## Later phases
+## Phase 1 — Simple AI QA Copilot
 
-Phase 1+ entries will be appended here after each milestone.
+### What I learned
+
+The first useful AI feature is a **request/response loop with a schema**, not a chatbot.
+
+Flow: UI → FastAPI → prompt file → AI service → provider → (Gemini or fake) → JSON parse → Pydantic validation → UI review pack.
+
+The UI never sees the API key. Tests never need Gemini. That is the same split as UI tests vs a stubbed billing adapter.
+
+### New AI concepts
+
+**Structured output.** We ask the model for JSON that matches a schema, not a paragraph. Analog: asserting an API response against a Swagger/OpenAPI schema instead of grepping log text.
+
+**JSON schema vs Pydantic.** Gemini is given a JSON Schema (`response_json_schema`). After the text comes back, **we** validate with Pydantic. Two gates: “please shape it this way” (model) and “reject it if you didn’t” (our app).
+
+**Temperature (0.3).** Controls how adventurous token choices are. Lower ≈ more repeatable, like fixed test data. Higher ≈ more variety, like random test data — useful for ideas, worse for a stable pack. We start low because QA output should be conservative.
+
+**Tokens / context (preview).** The prompt file + user feature description are the “payload size” of this call. We are nowhere near a context-window limit in Phase 1. When we paste 80-page requirements (Phase 3), this starts to matter.
+
+**Hallucination, now visible.** Even a valid JSON pack can invent a PolicyCenter screen. The disclaimer is not decoration. Schema validation does **not** prove the tests are right — only that they are well-formed.
+
+**Markdown instead of JSON.** A classic LLM defect. We strip ``` fences if present, then still 502 if it is prose. Analog: a SOAP response that arrived as an HTML error page.
+
+### New software concepts
+
+**CORS.** The browser blocks `localhost:5173` from calling `localhost:8000` unless the API allows that origin. Analog: a firewall rule between the UI test box and the API.
+
+**Dependency injection in FastAPI.** Tests replace `get_ai_service` with a service that uses `FakeProvider`. Analog: injecting a stub PolicyCenter client.
+
+**502 vs 422 vs 503.** 422 = our request schema (user input too short). 502 = upstream model output unusable. 503 = we are not configured (missing key). These are different failures; do not collapse them into “AI didn’t work.”
+
+### What we implemented
+
+- Backend generate + health endpoints
+- Gemini adapter + fake adapter
+- Prompt `prompts/qa/generate_test_pack.md`
+- Workbench UI
+- pytest for happy path, validation, bad JSON, orphan `scenario_id`
+
+### Why we implemented it this way
+
+A fake provider is not a toy. It is the adapter pattern paying off on day one: the UI and tests can run when Gemini is down, unpaid, or not configured.
+
+### Problems encountered
+
+- There is no `GEMINI_API_KEY` on this machine yet, so the running demo uses `AI_QA_PROVIDER=fake`. The Gemini adapter is implemented; it is not exercised live until a key is added.
+- FastAPI TestClient emitted a Starlette/httpx deprecation warning. Tests still passed; we did not chase a framework upgrade in this phase.
+
+### Questions I should understand before Phase 2
+
+1. Where is the JSON schema enforced — Gemini, Pydantic, or both?
+2. Why can a 200 response still be a bad test pack?
+3. What does temperature change, in QA terms?
+4. Why do tests use `FakeProvider` instead of calling Gemini?
+5. What would we add in Phase 2 that Phase 1 still generates in one blob?
+
+Answer: a **review gate**. Generate scenarios first. A human selects which ones to keep. Then generate cases only for those. Separate prompts and schemas, plus type filters.
+
+---
+
+## Phase 2 — Structured QA Generation
+
+### What I learned
+
+One LLM call that writes scenarios *and* cases is like asking a junior to deliver a full suite without a test-lead review of the scenario list. Phase 2 inserts that review.
+
+Two prompts + two JSON schemas is not ceremony. A cases prompt that cannot invent new scenario ids is a **smaller, safer contract**. Analog: a test that asserts a cancel API cannot also silently create a new policy.
+
+### New AI concepts
+
+**Prompt design as scope control.** The scenario prompt says “do not write steps.” The case prompt says “do not invent scenarios.” Same model, different job. Analog: a smoke suite vs an end-to-end suite — different charters.
+
+**Validation as a quality gate, not a style preference.**
+
+- Unrequested `type` (you asked for negative, model returned positive) → **502**. That is a contract break.
+- Requested type missing (you asked for regression, model skipped it) → **warning**. That is a coverage finding, like a planned test that was not written.
+
+Those are different defects. Do not treat them as one “AI error.”
+
+**Smaller schema, fewer hallucinations of shape.** Asking only for `{ test_cases }` makes it harder for the model to wander into a chatty summary.
+
+### New software concepts
+
+**Two-step API.** `/generate/scenarios` then `/generate/cases`. The second request sends the selected scenario objects back. The server does not remember the first call (no database). Analog: a stateless API test — you pass the quote id you care about; the server does not keep your last UI click.
+
+**Client state is the workbench.** Selected checkboxes live in React. Refresh loses them. That is still acceptable in Phase 2.
+
+### What we implemented
+
+- Type filter
+- Scenario endpoint + case endpoint
+- Two new prompts
+- Type and coverage validators
+- Workbench selection step
+- Tests for filter, leaked types, missing selected scenarios
+
+### Why we implemented it this way
+
+A checkbox-only filter on the old one-shot call would still write cases for scenarios you never reviewed. The product differentiator is **human-gated structured generation**, not more text.
+
+### Problems encountered
+
+- Fake-provider type filter failed tests because the prompt heading was `Requested scenario types` and the stub looked for a colon. The model does not need the colon; the stub did. Lesson: test doubles parse our prompt text — keep that text mechanical.
+
+### Questions I should understand before Phase 3
+
+1. Why are unrequested types a 502, but missing types a warning?
+2. Why does the cases request include the full scenario objects, not just ids?
+3. Why is there still no database?
+4. What breaks when the requirement is a 20-page story instead of a textarea?

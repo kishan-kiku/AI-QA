@@ -27,32 +27,39 @@ Not delivered (by design): running app, Gemini calls, UI, database.
 
 ## Phase 1 — Simple AI QA Copilot
 
-**Status: Next**
+**Status: Done**
 
-Objective: smallest useful loop — input a feature, get structured QA output from Gemini.
+Objective: smallest useful loop — input a feature, get structured QA output.
 
-Scope:
+Delivered:
 
-- FastAPI health + generate endpoint
-- Gemini provider adapter (model id from env)
-- Prompt file for QA generation
-- React/Vite workbench (not a chat clone)
+- FastAPI `GET /health` and `POST /api/v1/generate`
+- Gemini provider adapter (model id from env) plus a `fake` provider for tests/UI without a key
+- Prompt file `prompts/qa/generate_test_pack.md`
+- React/Vite workbench (review pack, not a chat clone)
 - Structured scenarios and test cases
-- Insurance-shaped example (policy cancellation) as the first demo, without claiming Guidewire internals we have not provided
-
-Learn: tokens, context, temperature, structured output, why the UI must not hold the API key.
+- Policy-cancellation sample that does not invent Guidewire screens
+- pytest coverage for validation, happy path (fake), markdown-instead-of-JSON, orphan scenario ids
 
 ## Phase 2 — Structured QA Generation
 
-**Status: Later**
+**Status: Done**
 
-Move beyond one prompt. Generate scenarios, cases, negatives, boundaries, regression ideas as validated JSON.
+Objective: stop generating the whole pack in one blob.
 
-Learn: JSON schema, prompt design, parsing failures, validation as a quality gate.
+Delivered:
+
+- Scenario-type filter (positive, negative, edge, boundary, regression)
+- `POST /api/v1/generate/scenarios` and `POST /api/v1/generate/cases`
+- Separate prompts and JSON schemas for each step
+- Validation gates: unrequested types rejected; every selected scenario must get a case
+- Missing requested types become warnings, not a hard failure
+- Workbench: generate scenarios → select → generate cases
+- Phase 1 full-pack endpoint kept
 
 ## Phase 3 — Requirement → Test Case
 
-**Status: Later**
+**Status: Next**
 
 Paste/upload a requirement. Analyze → acceptance criteria → scenarios → cases → coverage mapping.
 

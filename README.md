@@ -15,11 +15,11 @@ This repository is also a **learning product**. The application is built in phas
 
 ## Current phase
 
-**Phase 0 — Discovery and Architecture (complete).**
+**Phase 2 — Structured QA Generation (complete).**
 
-There is no running application yet. This phase exists so the map is written down *before* the first Gemini call.
+Choose scenario types, generate a scenario list, review it, then expand only the selected scenarios into test cases. Phase 1 one-shot `POST /api/v1/generate` still exists.
 
-**Next:** [Phase 1 — Simple AI QA Copilot](ROADMAP.md).
+**Next:** [Phase 3 — Requirement → Test Case](ROADMAP.md).
 
 ## What we are building first (Phase 1)
 
@@ -96,4 +96,33 @@ Think of `.env` as environment config for a test run (PolicyCenter URL, credenti
 
 ## How to run
 
-Not applicable in Phase 0. Phase 1 will add backend and frontend start commands here.
+1. Copy `.env.example` to `.env`.
+2. For a real Gemini call: set `GEMINI_API_KEY` and leave `AI_QA_PROVIDER=gemini`.
+   For UI/demo without a key: set `AI_QA_PROVIDER=fake`.
+3. Create a virtualenv and install backend deps:
+
+```text
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r backend\requirements.txt
+```
+
+4. Start the API (from the repo root):
+
+```text
+uvicorn app.main:app --reload --port 8000 --app-dir backend
+```
+
+   OpenAPI: http://localhost:8000/docs
+
+5. Start the workbench:
+
+```text
+cd frontend
+npm install
+npm run dev
+```
+
+   UI: http://localhost:5173
+
+The browser never receives `GEMINI_API_KEY`. Tests (`pytest`) inject a fake provider and do not call Gemini.

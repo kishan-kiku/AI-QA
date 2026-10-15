@@ -1,0 +1,311 @@
+:root {
+  --navy: #10233d;
+  --navy-soft: #1b3658;
+  --paper: #f4f1ea;
+  --card: #fffcf7;
+  --ink: #1c2430;
+  --muted: #5c6774;
+  --line: #d9d2c5;
+  --teal: #0f7a6c;
+  --teal-dark: #0b5c52;
+  --danger: #9b2c2c;
+  --danger-bg: #fdecea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.page {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1.25rem 1.75rem;
+  background: var(--navy);
+  color: #f7f4ee;
+}
+
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #c5d4c8;
+}
+
+.topbar h1 {
+  margin: 0.15rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.phase {
+  margin: 0;
+  color: #c9d3df;
+  font-size: 0.95rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.3fr);
+  gap: 1.25rem;
+  padding: 1.25rem 1.75rem 2rem;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem 1.5rem;
+}
+
+h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.lede,
+.muted,
+.meta,
+.status,
+.empty p {
+  color: var(--muted);
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+fieldset.type-picker {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 0.9rem 0 0;
+  padding: 0.65rem 0.8rem 0.75rem;
+}
+
+.type-picker legend {
+  font-weight: 700;
+  padding: 0 0.3rem;
+}
+
+.type-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+  margin: 0.25rem 0.85rem 0.25rem 0;
+  text-transform: capitalize;
+}
+
+.type-option input,
+.select-scenario input {
+  accent-color: var(--teal);
+}
+
+.select-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0.85rem 0 0.4rem;
+}
+
+.select-scenario {
+  margin: 0;
+  font-weight: 500;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.warnings {
+  background: #fce8c8;
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.warnings h2 {
+  margin-bottom: 0.35rem;
+  font-size: 1rem;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font: inherit;
+  line-height: 1.45;
+  background: #fff;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  background: var(--teal);
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--navy-soft);
+  border: 1px solid var(--line);
+}
+
+.disclaimer {
+  background: #efe8d8;
+  border-left: 4px solid var(--teal);
+  padding: 0.7rem 0.85rem;
+  margin-top: 0;
+}
+
+.meta {
+  font-size: 0.9rem;
+}
+
+code {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+.scenario {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.scenario-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.7rem;
+}
+
+.scenario-head h3 {
+  margin: 0;
+  flex: 1 1 12rem;
+  font-size: 1.05rem;
+}
+
+.badge {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: #e6eef2;
+}
+
+.badge-positive {
+  background: #d8efe4;
+  color: #145c3e;
+}
+
+.badge-negative {
+  background: #f8d7da;
+  color: #7a1f2b;
+}
+
+.badge-edge,
+.badge-boundary {
+  background: #fce8c8;
+  color: #7a4b00;
+}
+
+.badge-regression {
+  background: #d9e4f5;
+  color: #1e3a6b;
+}
+
+.testcase {
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  background: #f8f5ef;
+  border-radius: 8px;
+}
+
+.testcase h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.98rem;
+}
+
+.label {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.expected {
+  margin: 0;
+}
+
+.error {
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+}
+
+.error h2 {
+  color: var(--danger);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

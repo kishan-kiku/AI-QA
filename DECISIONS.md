@@ -144,6 +144,76 @@ Small implementation details do not belong here.
 **Status:** Accepted  
 **Phase:** 0
 
-**Choice:** Commit at logical milestones (Phase 0 complete, then Phase 1, …). Do not push unless asked. Repo currently has no remote.
+**Choice:** Commit at logical milestones (Phase 0 complete, then Phase 1, …). Do not push unless asked.
 
 **Why:** History should match learning milestones so the repo stays teachable.
+
+**Update:** Remote is `https://github.com/kishan-kiku/AI-QA.git`.
+
+---
+
+## D010 — Fake provider beside Gemini
+
+**Date:** 2026-10-08  
+**Status:** Accepted  
+**Phase:** 1
+
+**Context:** Need to run UI and tests without a Gemini key, and to prove the adapter is real.
+
+**Choice:** `AI_QA_PROVIDER=gemini|fake`. Fake returns a canned policy-cancellation pack.
+
+**Why:** Same reason you stub an unavailable PolicyCenter in a CI pipeline. The rest of the app must not care.
+
+**Consequences:** A local `.env` can use `fake` for demos. Production-shaped runs must use `gemini` and a real key. Tests always inject `FakeProvider` and ignore this env var.
+
+---
+
+## D011 — JSON Schema to Gemini, Pydantic after the fact
+
+**Date:** 2026-10-08  
+**Status:** Accepted  
+**Phase:** 1
+
+**Choice:** Pass a hand-written JSON Schema via `response_json_schema`. Parse text (including markdown fences). Validate with `LLMQAPayload`. Reject orphan `scenario_id` values.
+
+**Why:** Asking the model nicely is not a quality gate. Validating the actual result is. We avoid Pydantic `$defs` graphs because Gemini supports a JSON Schema subset.
+
+---
+
+## D012 — Temperature 0.3 for QA generation
+
+**Date:** 2026-10-08  
+**Status:** Accepted  
+**Phase:** 1
+
+**Choice:** Gemini `temperature=0.3`.
+
+**Why:** QA packs should be conservative. We can raise temperature later if we want more diverse negative ideas.
+
+---
+
+## D013 — Two-step generation: scenarios, then cases
+
+**Date:** 2026-10-11  
+**Status:** Accepted  
+**Phase:** 2
+
+**Options:** (A) type checkboxes on the Phase 1 one-shot call; (B) generate scenarios, human selects, then generate cases.
+
+**Choice:** B for the workbench. Keep `POST /api/v1/generate` as a one-shot API.
+
+**Why:** A test lead reviews the scenario list before anyone writes cases. A filter on a one-shot call still skips that gate.
+
+**Consequences:** Two prompts, two schemas, two endpoints. No session store — the UI sends selected scenarios back on the second call.
+
+---
+
+## D014 — Missing requested types are warnings; extra types are errors
+
+**Date:** 2026-10-11  
+**Status:** Accepted  
+**Phase:** 2
+
+**Choice:** If the model returns a `type` you did not ask for → 502. If it skips a type you asked for → `warnings[]`.
+
+**Why:** Extra types are a contract violation (like an API adding undeclared fields you must not persist). Missing types are a coverage gap you may accept, like a planned negative that was not written this sprint.
